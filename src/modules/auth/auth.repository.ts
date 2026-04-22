@@ -11,5 +11,10 @@ export const authRepository = {
     const result = await api.post('/auth/signin', { email, password });
     const { user, token } = result.data;
     return { user: new User(user), token };
+  },
+  async getCurrentUser(): Promise<User | undefined> {
+    const result = await api.get('/auth/me');
+    if (result.data === null) { return; }
+    return new User(result.data);
   }
 }

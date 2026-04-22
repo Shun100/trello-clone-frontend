@@ -8,6 +8,10 @@
 
   <!-- 依存ライブラリのインストール -->
   npm install
+  <!-- HTTP用 -->
   npm install axios
+  <!-- ページ遷移制御 -->
   npm install react-router-dom
+  <!-- グローバルステート管理 -->
+  npm install jotai
 ```

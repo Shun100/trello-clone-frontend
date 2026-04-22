@@ -1,20 +1,26 @@
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import './auth.css';
 import { useState } from 'react';
 import { authRepository } from '../../modules/auth/auth.repository';
+import { currentUserAtom } from '../../modules/auth/current-user.state';
+import { useAtom } from 'jotai';
 
 function Signup() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [currentUser, setCurrentUser] = useAtom(currentUserAtom);
 
   const signup = async() => {
     // validation
     if (name === '' || email === '' || password === '') { return; }
 
-    // WIP: ユーザ情報とトークンを保存する
     const { user, token } = await authRepository.signup(name, email, password);
+    localStorage.setItem('token', token);
+    setCurrentUser(user);
   }
+
+  if (currentUser !== null) { <Navigate to="/" /> }
 
   return (
       <div className="signup-container">
