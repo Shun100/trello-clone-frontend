@@ -1,22 +1,15 @@
-import { useAtom, useAtomValue } from "jotai";
+import { useAtomValue } from "jotai";
 import { currentUserAtom } from "../../modules/auth/current-user.state";
 import { Navigate } from "react-router-dom";
-import { useEffect } from "react";
-import { authRepository } from "../../modules/auth/auth.repository";
+import SortableBoard from "./SortableBoard";
+import { Sidebar } from "./Sidebar";
+import { CardModal } from "./CardModal";
+import './Home.css';
 
 function Home() {
-  // const currentUser = useAtomValue(currentUserAtom);
-  const [currentUser, setCurrentUser] = useAtom(currentUserAtom);
-  // if (currentUser === null) { return <Navigate to={'/signin'} /> }
-
-  useEffect(async () => {
-    const user = await authRepository.getCurrentUser();
-    if (user) {
-      setCurrentUser(user);
-    } else {
-      <Navigate to={'/signin'} />;
-    }
-  }, []);
+  const currentUser = useAtomValue(currentUserAtom);
+  console.log(currentUser);
+  if (!currentUser) { return <Navigate to={'/signin'} /> }
 
   return (
     <div>
@@ -39,10 +32,9 @@ function Home() {
         <h1 className="board-title">マイボード</h1>
       </div>
 
-      {/* TODO: ホーム画面で使用するReactコンポーネントを追加 */}
-      {/* <SotableBoard />
-      <Sidebar />
-      <CardModdal /> */}
+      <SortableBoard />
+      {/* <Sidebar /> */}
+      {/* <CardModal /> */}
     </div>
   );
 }

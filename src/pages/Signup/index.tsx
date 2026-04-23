@@ -15,12 +15,16 @@ function Signup() {
     // validation
     if (name === '' || email === '' || password === '') { return; }
 
-    const { user, token } = await authRepository.signup(name, email, password);
-    localStorage.setItem('token', token);
-    setCurrentUser(user);
+    try {
+      const { user, token } = await authRepository.signup(name, email, password);
+      localStorage.setItem('token', token);
+      setCurrentUser(user);
+    } catch (error) {
+      console.error(error);
+    }
   }
 
-  if (currentUser !== null) { <Navigate to="/" /> }
+  if (currentUser) { return <Navigate to="/home" /> }
 
   return (
       <div className="signup-container">

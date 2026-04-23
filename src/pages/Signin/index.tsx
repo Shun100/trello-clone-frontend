@@ -14,12 +14,16 @@ function Signin() {
     // validation
     if (email === '' || password === '') { return; }
 
-    const { user, token } = await authRepository.signin(email, password);
-    localStorage.setItem('token', token);
-    setCurrentUser(user);
+    try {
+      const { user, token } = await authRepository.signin(email, password);
+      localStorage.setItem('token', token);
+      setCurrentUser(user);
+    } catch (error) {
+      console.error(error);
+    }
   }
 
-  if (currentUser !== null) { return <Navigate to="/" /> }
+  if (currentUser) { return <Navigate to="/home" /> }
 
   return (
     <div className="signup-container">
