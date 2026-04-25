@@ -1,38 +1,56 @@
-export const Sidebar = () => {
+import { useAtom } from "jotai";
+import { currentUserAtom } from "../../../modules/auth/current-user.state";
+import { useState } from "react";
+import { EditNameForm } from "./editNameForm";
+import { UserInfo } from "./userInfo";
+import { accountRepository } from "../../../modules/account/account.repository";
+import { useNavigate } from "react-router-dom";
+
+type SidebarProps = {
+  closeSidebar: () => void
+};
+
+export const Sidebar = ({ closeSidebar }: SidebarProps) => {
+  const [currentUser, setCurrentUser] = useAtom(currentUserAtom);
+  const [name, setName] = useState(currentUser?.name ?? 'ゲスト');
+  const [showForm, setShowForm] = useState(false);
+  const navigate = useNavigate();
+
+  const updateUserProfile = async (name: string): Promise<void> => {
+    try {
+      const user = await accountRepository.updateProfile(name);
+      setCurrentUser(user);
+      setName(user.name);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  const logout = (): void => {
+    setCurrentUser(undefined);
+    localStorage.removeItem('token');
+    navigate('/signin');
+  }
+
   return (
     <>
-      <div className="sidebar-overlay" />
+      <div className="sidebar-overlay" onClick={closeSidebar}/>
       <div className="sidebar">
         <div className="sidebar-header">
-          <button className="sidebar-close-button">×</button>
-
-          <div className="sidebar-user-info">
-            <div className="sidebar-user-name" title="プロフィールを編集">
-              テストユーザー
-            </div>
-            <button className="sidebar-edit-button" title="プロフィールを編集">
-              ✏️
-            </button>
-          </div>
-          {/* <div className="sidebar-edit-form">
-              <input
-                type="text"
-                placeholder="ユーザー名を入力"
-                className="sidebar-name-input"
-                autoFocus
-                maxLength={20}
-              />
-
-              <div className="sidebar-edit-actions">
-                <button className="sidebar-save-button">保存</button>
-                <button className="sidebar-cancel-button">キャンセル</button>
-              </div>
-            </div> */}
+          <button className="sidebar-close-button" onClick={closeSidebar}>×</button>
+          {showForm
+            ? 
+            <EditNameForm update={updateUserProfile} closeForm={() => setShowForm(false)}/>
+            :
+            <UserInfo name={name} showForm={() => setShowForm(true)} />
+          }
         </div>
-
         <div className="sidebar-content">
           <div className="sidebar-section">
-            <button className="sidebar-board-item">
+            <button
+              className="sidebar-board-item"
+              onClick={logout}
+            >
               <span className="sidebar-board-name">ログアウト</span>
             </button>
           </div>

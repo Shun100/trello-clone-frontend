@@ -5,17 +5,19 @@ import SortableBoard from "./SortableBoard";
 import { Sidebar } from "./Sidebar";
 import { CardModal } from "./CardModal";
 import './Home.css';
+import { useState } from "react";
 
 function Home() {
   const currentUser = useAtomValue(currentUserAtom);
-  console.log(currentUser);
+  const [showSidebar, setShowSidebar] = useState(false);
+
   if (!currentUser) { return <Navigate to={'/signin'} /> }
 
   return (
     <div>
       <header className="header">
         <div className="header-left">
-          <button className="apps-button">
+          <button className="apps-button" onClick={() => setShowSidebar(true)}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
               <path d="M4 6h16v2H4V6zm0 5h16v2H4v-2zm0 5h16v2H4v-2z" />
             </svg>
@@ -33,7 +35,7 @@ function Home() {
       </div>
 
       <SortableBoard />
-      {/* <Sidebar /> */}
+      {showSidebar && <Sidebar closeSidebar={() => setShowSidebar(false)}/>}
       {/* <CardModal /> */}
     </div>
   );
