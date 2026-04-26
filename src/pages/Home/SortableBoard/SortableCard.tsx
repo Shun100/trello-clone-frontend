@@ -1,3 +1,4 @@
+// カード1枚を表すコンポーネント
 export function SortableCard() {
   return (
     <div>
