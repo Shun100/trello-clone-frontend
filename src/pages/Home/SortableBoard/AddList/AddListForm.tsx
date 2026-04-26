@@ -1,11 +1,14 @@
+import { useState } from "react";
+
 // リスト追加画面のコンポーネント
 
 type AddListFormProps = {
   closeAddListForm: () => void;
-  createList: () => Promise<void>
-  setTitle: (title: string) => void;
+  createList: (title: string) => Promise<void>;
 }
-export function AddListForm({ closeAddListForm, createList, setTitle }: AddListFormProps) {
+export function AddListForm({ closeAddListForm, createList }: AddListFormProps) {
+  const [title, setTitle] = useState<string>('');
+
   return (
     <div className="add-list-form">
       <input
@@ -14,9 +17,14 @@ export function AddListForm({ closeAddListForm, createList, setTitle }: AddListF
         className="add-list-input"
         autoFocus
         onChange={e => setTitle(e.target.value)}
+        value={title}
       />
       <div className="add-list-actions">
-        <button className="add-list-submit" onClick={createList}>リストを追加</button>
+        <button
+          className="add-list-submit"
+          onClick={() => createList(title).then(() => setTitle(''))}>
+            リストを追加
+        </button>
         <button className="add-list-cancel" onClick={closeAddListForm}>×</button>
       </div>
     </div>

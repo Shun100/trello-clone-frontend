@@ -15,3 +15,11 @@ export const addListAtom = atom(
     set(currentListsAtom, [...prev, newList]);
   }
 );
+
+export const deleteListAtom = atom(
+  null,
+  (get, set, listId: string) => {
+    const prev = get(currentListsAtom);
+    set(currentListsAtom, prev.filter(list => list.id !== listId));
+  }
+);

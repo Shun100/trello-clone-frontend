@@ -13,10 +13,9 @@ type AddListProps = {
 
 export function AddList({ createListRepository }: AddListProps) {
   const [showForm, setShowForm] = useState<boolean>(false);
-  const [title, setTitle] = useState<string>('');
   const addList = useSetAtom(addListAtom);
 
-  const createList = async (): Promise<void> => {
+  const createList = async (title: string): Promise<void> => {
     const newList = await createListRepository(title);
     addList(newList);
   }
@@ -28,7 +27,6 @@ export function AddList({ createListRepository }: AddListProps) {
         <AddListForm
           closeAddListForm={() => setShowForm(false)}
           createList={createList}
-          setTitle={setTitle}
         />
         :
         <AddListButton openAddListForm={() => setShowForm(true)} />
