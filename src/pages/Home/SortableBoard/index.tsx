@@ -6,6 +6,7 @@ import { listRepository } from '../../../modules/lists/list.repository';
 import type { List } from '../../../modules/lists/list.entity';
 import { currentUserAtom } from '../../../modules/auth/current-user.state';
 import { useEffect } from 'react';
+import { DragDropContext, Droppable } from '@hello-pangea/dnd';
 
 /*
  * カードとリスト全体 (= ボードのタイトルから下すべて)
@@ -19,7 +20,6 @@ export default function SortableBoard() {
   const [currentLists, setCurrentLists] = useAtom(currentListsAtom);
 
   const createListRepository = async (title: string): Promise<List> => {
-    // WIP: boardIdを取得する
     const boardId = currentUser!.boardId;
     const newList =  await listRepository.create(boardId, title);
     return newList;
@@ -43,14 +43,23 @@ export default function SortableBoard() {
   }, [currentUser, setCurrentLists]);
 
   return (
-    <div className="board-container">
-      {/* WIP: サンプルカードを追加 */}
-      {currentLists?.map(list =>
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <SortableList list={list} deleteListRepository={deleteListRepository} />
-        </div>
-      )}
-      <AddList createListRepository={createListRepository}/>
-    </div>
+    <DragDropContext onDragEnd={() => {}}>
+      <div className="board-container">
+        <Droppable droppableId="board" type="list" direction="horizontal">
+          {provided => (
+            <div style={{ display: 'flex', gap: '12px' }}
+              {...provided.droppableProps} // Droppableとして必要な属性をまとめてDOMに設定
+              ref={provided.innerRef} // DOM要素をライブラリに渡す
+            >
+              {currentLists?.map(list =>
+                <SortableList list={list} deleteListRepository={deleteListRepository} />
+              )}
+              {provided.placeholder} {/* ドラッグ中のスタイル崩れを防ぐ */}
+            </div>
+          )}
+        </Droppable>
+        <AddList createListRepository={createListRepository}/>
+      </div>
+    </DragDropContext>
   );
 }

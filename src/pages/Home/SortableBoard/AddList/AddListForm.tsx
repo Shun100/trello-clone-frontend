@@ -22,10 +22,18 @@ export function AddListForm({ closeAddListForm, createList }: AddListFormProps) 
       <div className="add-list-actions">
         <button
           className="add-list-submit"
-          onClick={() => createList(title).then(() => setTitle(''))}>
+          onClick={
+            () => createList(title)
+              .then(() => setTitle(''))
+              .then(() => closeAddListForm())
+          }>
             リストを追加
         </button>
-        <button className="add-list-cancel" onClick={closeAddListForm}>×</button>
+        <button className="add-list-cancel" onClick={() => {
+            closeAddListForm();
+
+          }
+          }>×</button>
       </div>
     </div>
   );

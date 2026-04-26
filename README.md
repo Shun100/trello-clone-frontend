@@ -14,4 +14,6 @@
   npm install react-router-dom
   <!-- グローバルステート管理 -->
   npm install jotai
+  <!-- ドラッグ&ドロップ用 -->
+  npm install @hello-pangea/dnd
 ```
