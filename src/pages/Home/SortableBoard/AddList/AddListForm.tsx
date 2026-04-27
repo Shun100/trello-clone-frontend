@@ -29,11 +29,12 @@ export function AddListForm({ closeAddListForm, createList }: AddListFormProps) 
           }>
             リストを追加
         </button>
-        <button className="add-list-cancel" onClick={() => {
-            closeAddListForm();
-
-          }
-          }>×</button>
+        <button
+          className="add-list-cancel"
+          onClick={() => closeAddListForm()
+        }>
+          ×
+        </button>
       </div>
     </div>
   );

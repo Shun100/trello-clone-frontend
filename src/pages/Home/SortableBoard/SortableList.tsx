@@ -4,15 +4,17 @@ import type { List } from '../../../modules/lists/list.entity';
 import { deleteListAtom } from '../../../modules/lists/current-lists';
 import { useSetAtom } from 'jotai';
 import { Draggable } from '@hello-pangea/dnd';
+import type { Card } from '../../../modules/cards/card.entity';
 
 // リスト1つに対するコンポーネント
 
 type SortableListProps = {
   list: List;
   deleteListRepository: (listId: string) => Promise<void>;
+  cards: Card[];
 }
 
-export function SortableList({ list, deleteListRepository }: SortableListProps) {
+export function SortableList({ list, deleteListRepository, cards }: SortableListProps) {
   const deleteList = useSetAtom(deleteListAtom);
   
   return (
@@ -46,9 +48,9 @@ export function SortableList({ list, deleteListRepository }: SortableListProps) 
               </button>
             </div>
             <div style={{ minHeight: '1px' }}>
-              <SortableCard />
+              {cards.map(card => <SortableCard key={card.id} card={card} />)}
             </div>
-            <AddCard />
+            <AddCard listId={list.id}/>
           </div>
         </div>
       )}

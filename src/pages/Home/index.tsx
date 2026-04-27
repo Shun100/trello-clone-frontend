@@ -3,13 +3,15 @@ import { currentUserAtom } from "../../modules/auth/current-user.state";
 import { Navigate } from "react-router-dom";
 import SortableBoard from "./SortableBoard";
 import { Sidebar } from "./Sidebar";
-import { CardModal } from "./CardModal";
 import './Home.css';
 import { useState } from "react";
+import { selectedCardIdAtom } from "../../modules/cards/current-cards";
+import { CardModal } from "./CardModal";
 
 function Home() {
   const currentUser = useAtomValue(currentUserAtom);
   const [showSidebar, setShowSidebar] = useState(false);
+  const selectedCardId = useAtomValue(selectedCardIdAtom);
 
   if (!currentUser) { return <Navigate to={'/signin'} /> }
 
@@ -36,7 +38,7 @@ function Home() {
 
       <SortableBoard />
       {showSidebar && <Sidebar closeSidebar={() => setShowSidebar(false)}/>}
-      {/* <CardModal /> */}
+      {selectedCardId && <CardModal />}
     </div>
   );
 }

@@ -7,6 +7,9 @@ import { List } from '../../../modules/lists/list.entity';
 import { currentUserAtom } from '../../../modules/auth/current-user.state';
 import { useEffect } from 'react';
 import { DragDropContext, Droppable, type DropResult } from '@hello-pangea/dnd';
+import * as ArrayUtil from '../../../utils/arrayUtil';
+import { currentCardsAtom } from '../../../modules/cards/current-cards';
+import { cardRepository } from '../../../modules/cards/card.repository';
 
 /*
  * カードとリスト全体 (= ボードのタイトルから下すべて)
@@ -18,6 +21,7 @@ import { DragDropContext, Droppable, type DropResult } from '@hello-pangea/dnd';
 export default function SortableBoard() {
   const currentUser = useAtomValue(currentUserAtom);
   const [currentLists, setCurrentLists] = useAtom(currentListsAtom);
+  const [currentCards, setCurrentCards] = useAtom(currentCardsAtom);
 
   const createListRepository = async (title: string): Promise<List> => {
     const boardId = currentUser!.boardId;
@@ -33,28 +37,25 @@ export default function SortableBoard() {
     const { destination, source } = result;
     if (destination === null) { return ;}
 
-
-    // 移動前のインデックスの要素を削除して、移動後のインデックスの位置に挿入する
-    const [targetList] = currentLists.splice(source.index, 1);
-    currentLists.splice(destination.index, 0, targetList);
-
-    const updatedLists = currentLists.map((list, index) => new List({...list, position: index}));
+    const originalLists = currentLists.map(list => new List(list)); // ロールバック用
+    const resortedLists = ArrayUtil
+      .moveTo(currentLists, source.index, destination.index)
+      .map((list, index) => new List({...list, position: index}));
 
     /*
      * DB更新 -> 画面更新 版
      * DBがマスターデータを持つので通常はこの順だが、画面のレスポンスが悪くなるので今回は不採用
      */
-    // listRepository.update(updatedLists)
-    //   .then(() => setCurrentLists(updatedLists))
+    // listRepository.update(resortedLists)
+    //   .then(() => setCurrentLists(resortedLists))
     //   .catch(error => console.error(error));
 
     /*
      * 画面更新 -> DB更新 版
      * 先に画面を更新するのでレスポンスを損なわない 今回はこちらを採用
      */
-    const originalLists = currentLists; // ロールバック用
-    setCurrentLists(updatedLists);
-    listRepository.update(updatedLists)
+    setCurrentLists(resortedLists);
+    listRepository.update(resortedLists)
       .catch(error => {
         setCurrentLists(originalLists); // ロールバック
         console.error(error);
@@ -67,12 +68,15 @@ export default function SortableBoard() {
       console.error('currentUser is undefined');
       return;
     }
-    
     listRepository
-      .find(currentUser!.boardId)
+      .find(currentUser.boardId)
       .then(setCurrentLists)
       .catch(console.error);
-  }, [currentUser, setCurrentLists]);
+    cardRepository
+      .find(currentUser.boardId)
+      .then(setCurrentCards)
+      .catch(console.error);
+  }, [currentUser, setCurrentLists, setCurrentCards]);
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
@@ -88,6 +92,7 @@ export default function SortableBoard() {
                   key={list.id}
                   list={list}
                   deleteListRepository={deleteListRepository}
+                  cards={currentCards.filter(card => card.listId === list.id)}
                 />
               )}
               {provided.placeholder} {/* ドラッグ中のスタイル崩れを防ぐ */}
