@@ -11,6 +11,7 @@ type SortableListProps = {
   list: List;
   deleteListRepository: (listId: string) => Promise<void>;
 }
+
 export function SortableList({ list, deleteListRepository }: SortableListProps) {
   const deleteList = useSetAtom(deleteListAtom);
   

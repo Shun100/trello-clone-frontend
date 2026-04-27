@@ -10,9 +10,13 @@ export const listRepository = {
     const result = await api.get(`/lists/${boardId}`);
     return result.data.map((list: List) => new List(list));
   },
+  async update(lists: List[]): Promise<void> {
+    const result = await api.put(`/lists`, { lists });
+    return result.data.map((list: List) => new List(list));
+  },
   async delete(listId: string): Promise<void> {
     api
       .delete(`/lists/${listId}`)
       .catch(err => {throw new Error(err)});
-  }
+  },
 }

@@ -3,10 +3,10 @@ import { AddList } from './AddList/index';
 import { useAtom, useAtomValue } from 'jotai';
 import { currentListsAtom } from '../../../modules/lists/current-lists';
 import { listRepository } from '../../../modules/lists/list.repository';
-import type { List } from '../../../modules/lists/list.entity';
+import { List } from '../../../modules/lists/list.entity';
 import { currentUserAtom } from '../../../modules/auth/current-user.state';
 import { useEffect } from 'react';
-import { DragDropContext, Droppable } from '@hello-pangea/dnd';
+import { DragDropContext, Droppable, type DropResult } from '@hello-pangea/dnd';
 
 /*
  * カードとリスト全体 (= ボードのタイトルから下すべて)
@@ -29,6 +29,38 @@ export default function SortableBoard() {
     await listRepository.delete(boardId);
   }
 
+  const handleDragEnd = async (result: DropResult) => {
+    const { destination, source } = result;
+    if (destination === null) { return ;}
+
+
+    // 移動前のインデックスの要素を削除して、移動後のインデックスの位置に挿入する
+    const [targetList] = currentLists.splice(source.index, 1);
+    currentLists.splice(destination.index, 0, targetList);
+
+    const updatedLists = currentLists.map((list, index) => new List({...list, position: index}));
+
+    /*
+     * DB更新 -> 画面更新 版
+     * DBがマスターデータを持つので通常はこの順だが、画面のレスポンスが悪くなるので今回は不採用
+     */
+    // listRepository.update(updatedLists)
+    //   .then(() => setCurrentLists(updatedLists))
+    //   .catch(error => console.error(error));
+
+    /*
+     * 画面更新 -> DB更新 版
+     * 先に画面を更新するのでレスポンスを損なわない 今回はこちらを採用
+     */
+    const originalLists = currentLists; // ロールバック用
+    setCurrentLists(updatedLists);
+    listRepository.update(updatedLists)
+      .catch(error => {
+        setCurrentLists(originalLists); // ロールバック
+        console.error(error);
+      });
+  }
+
   // ページ初回読込時の処理
   useEffect(() => {
     if (!currentUser) {
@@ -43,7 +75,7 @@ export default function SortableBoard() {
   }, [currentUser, setCurrentLists]);
 
   return (
-    <DragDropContext onDragEnd={() => {}}>
+    <DragDropContext onDragEnd={handleDragEnd}>
       <div className="board-container">
         <Droppable droppableId="board" type="list" direction="horizontal">
           {provided => (
@@ -52,7 +84,11 @@ export default function SortableBoard() {
               ref={provided.innerRef} // DOM要素をライブラリに渡す
             >
               {currentLists?.map(list =>
-                <SortableList list={list} deleteListRepository={deleteListRepository} />
+                <SortableList
+                  key={list.id}
+                  list={list}
+                  deleteListRepository={deleteListRepository}
+                />
               )}
               {provided.placeholder} {/* ドラッグ中のスタイル崩れを防ぐ */}
             </div>
