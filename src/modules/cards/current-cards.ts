@@ -12,6 +12,14 @@ export const addCardAtom = atom(
   }
 );
 
+export const updateCardAtom = atom(
+  null,
+  (get, set, updatedCard: Card) => {
+    const prev = get(currentCardsAtom)
+    set(currentCardsAtom, prev.map(card => card.id === updatedCard.id ? updatedCard : card));
+  }
+)
+
 export const deleteCardAtom = atom(
   null,
   (get, set, cardId: string) => {

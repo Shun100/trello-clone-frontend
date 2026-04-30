@@ -1655,6 +1655,7 @@ body {
 }
 
 .card-modal-due-date {
+  display: flex;
   width: 200px;
   padding: 8px 12px;
   border: 2px solid #dfe1e6;

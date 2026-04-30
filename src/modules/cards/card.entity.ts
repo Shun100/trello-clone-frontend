@@ -9,5 +9,9 @@ export class Card {
 
   constructor(data: Card) {
     Object.assign(this, data);
+
+    if (!(data.dueDate instanceof Date)) {
+      this.dueDate = new Date(data.dueDate);
+    }
   }
 }
