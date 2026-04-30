@@ -6,10 +6,11 @@ import { listRepository } from '../../../modules/lists/list.repository';
 import { List } from '../../../modules/lists/list.entity';
 import { currentUserAtom } from '../../../modules/auth/current-user.state';
 import { useEffect } from 'react';
-import { DragDropContext, Droppable, type DropResult } from '@hello-pangea/dnd';
+import { DragDropContext, Droppable, type DraggableLocation, type DropResult } from '@hello-pangea/dnd';
 import * as ArrayUtil from '../../../utils/arrayUtil';
 import { currentCardsAtom } from '../../../modules/cards/current-cards';
 import { cardRepository } from '../../../modules/cards/card.repository';
+import { Card } from '../../../modules/cards/card.entity';
 
 /*
  * カードとリスト全体 (= ボードのタイトルから下すべて)
@@ -34,9 +35,18 @@ export default function SortableBoard() {
   }
 
   const handleDragEnd = async (result: DropResult) => {
-    const { destination, source } = result;
-    if (destination === null) { return ;}
+    const { destination, source, type } = result;
 
+    if (destination === null) return;
+
+    if (type === 'list') {
+      await handleListDragEnd(source, destination);
+    } else if (type === 'card') {
+      await handleCardDragEnd(source, destination);
+    }
+  }
+
+  const handleListDragEnd = async (source: DraggableLocation, destination: DraggableLocation) => {
     const originalLists = currentLists.map(list => new List(list)); // ロールバック用
     const resortedLists = ArrayUtil
       .moveTo(currentLists, source.index, destination.index)
@@ -55,9 +65,25 @@ export default function SortableBoard() {
      * 先に画面を更新するのでレスポンスを損なわない 今回はこちらを採用
      */
     setCurrentLists(resortedLists);
-    listRepository.update(resortedLists)
+    listRepository
+      .update(resortedLists)
       .catch(error => {
         setCurrentLists(originalLists); // ロールバック
+        console.error(error);
+      });
+  }
+
+  const handleCardDragEnd = async (source: DraggableLocation, destination: DraggableLocation) => {
+    const originalCards = currentCards.map(card => new Card(card)); // ロールバック用
+    const resortedCards = ArrayUtil
+      .moveTo(currentCards, source.index, destination.index)
+      .map((card, index) => new Card({...card, position: index}));
+    
+    setCurrentCards(resortedCards);
+    cardRepository
+      .update(resortedCards)
+      .catch(error => {
+        setCurrentCards(originalCards);
         console.error(error);
       });
   }

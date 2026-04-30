@@ -3,7 +3,7 @@ import { AddCard } from './AddCard';
 import type { List } from '../../../modules/lists/list.entity';
 import { deleteListAtom } from '../../../modules/lists/current-lists';
 import { useSetAtom } from 'jotai';
-import { Draggable } from '@hello-pangea/dnd';
+import { Draggable, Droppable } from '@hello-pangea/dnd';
 import type { Card } from '../../../modules/cards/card.entity';
 
 // リスト1つに対するコンポーネント
@@ -47,9 +47,19 @@ export function SortableList({ list, deleteListRepository, cards }: SortableList
                 </svg>
               </button>
             </div>
-            <div style={{ minHeight: '1px' }}>
-              {cards.map(card => <SortableCard key={card.id} card={card} />)}
-            </div>
+            <Droppable droppableId={list.id} type="card">
+              {provided => (
+                <div
+                  style={{ minHeight: '1px' }}
+                  ref={provided.innerRef} // Droppableとして必要な属性をDOMに設定
+                  {...provided.droppableProps} // DOM要素をライブラリに渡す
+                >
+                  {cards.map(card => <SortableCard key={card.id} card={card} />)}
+                  {provided.placeholder}
+                  {/* draggableの要素がドラッグされたときに、そこに空いた穴をplaceholderで埋めてスタイルが崩れないようにしてくれる */}
+                </div>
+              )}
+            </Droppable>
             <AddCard listId={list.id}/>
           </div>
         </div>
