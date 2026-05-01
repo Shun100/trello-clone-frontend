@@ -6,11 +6,10 @@ import { listRepository } from '../../../modules/lists/list.repository';
 import { List } from '../../../modules/lists/list.entity';
 import { currentUserAtom } from '../../../modules/auth/current-user.state';
 import { useEffect } from 'react';
-import { DragDropContext, Droppable, type DraggableLocation, type DropResult } from '@hello-pangea/dnd';
-import * as ArrayUtil from '../../../utils/arrayUtil';
+import { DragDropContext, Droppable, type DropResult } from '@hello-pangea/dnd';
 import { currentCardsAtom, updateCardsAtom } from '../../../modules/cards/current-cards';
 import { cardRepository } from '../../../modules/cards/card.repository';
-import { Card } from '../../../modules/cards/card.entity';
+import { handleListDragEnd, handleCardDragEnd } from './cardDragLogic';
 
 /*
  * カードとリスト全体 (= ボードのタイトルから下すべて)
@@ -56,101 +55,10 @@ export default function SortableBoard() {
     if (destination === null) return;
 
     if (type === 'list') {
-      await handleListDragEnd(source, destination);
+      await handleListDragEnd(currentLists, setCurrentLists, source, destination);
     } else if (type === 'card') {
-      if (source.droppableId === destination.droppableId) {
-        // 同じリスト内での移動
-        await handleCardDragEndWithinList(source, destination);
-      } else {
-        //リストを跨っての移動
-        await handleCardDragEndAcrossList(source, destination);
-      }
+      await handleCardDragEnd(currentCards, updateCards, setCurrentCards, source, destination);
     }
-  }
-
-  /**
-   * リスト ドラッグ&ドロップ終了時処理
-   * 各リストに順番情報を設定し直し、DBに登録 + 画面に再描画する
-   * @param { DraggableLocation } source - ドラッグ&ドロップ前の情報
-   * @param { DraggableLocation } destination - ドラッグ&ドロップ後の情報
-   */
-  const handleListDragEnd = async (source: DraggableLocation, destination: DraggableLocation) => {
-    const originalLists = currentLists.map(list => new List(list)); // ロールバック用
-    const resortedLists = ArrayUtil
-      .moveTo(currentLists, source.index, destination.index)
-      .map((list, index) => new List({...list, position: index}));
-
-    setCurrentLists(resortedLists);
-    listRepository
-      .update(resortedLists)
-      .catch(error => {
-        setCurrentLists(originalLists); // ロールバック
-        console.error(error);
-      });
-  }
-
-  /**
-   * カード ドラッグ&ドロップ終了時処理 (同じリスト内で移動)
-   * 各カードに順番情報を設定し直し、DBに登録 + 画面に再描画する
-   * @param { DraggableLocation } source - ドラッグ&ドロップ前の情報
-   * @param { DraggableLocation } destination - ドラッグ&ドロップ後の情報
-   */
-  const handleCardDragEndWithinList = async (source: DraggableLocation, destination: DraggableLocation) => {
-    const originalCards = currentCards.map(card => new Card(card)); // ロールバック用
-    let i = 0;
-    const targetCards = currentCards.filter(card => card.listId === source.droppableId);
-    const resortedCards = ArrayUtil
-      .moveTo(targetCards, source.index, destination.index)
-      .map(card => new Card({ ...card, position: i++ }));
-
-    updateCards(resortedCards);
-    cardRepository
-      .update(resortedCards)
-      .catch(error => {
-        setCurrentCards(originalCards);
-        console.error(error);
-      }); 
-  }
-
-  /**
-   * カード ドラッグ&ドロップ終了時処理 (異なるリスト間で移動)
-   * 各カードに順番情報を設定し直し、DBに登録 + 画面に再描画する
-   * 
-   * ※ FIY
-   *  List (Droppable) を跨ってCard (Draggable) を移動すると、positionとlistIdが自動的に更新される
-   * 
-   * @param { DraggableLocation } source - ドラッグ&ドロップ前の情報
-   * @param { DraggableLocation } destination - ドラッグ&ドロップ後の情報
-   */
-  const handleCardDragEndAcrossList = async (source: DraggableLocation, destination: DraggableLocation) => {
-    console.log(currentCards);
-    const originalCards = currentCards.map(card => new Card(card));
-
-    // 移動対象のカードの情報を更新
-    const target = new Card (currentCards.filter(card => card.listId === source.droppableId)[source.index]);
-    target.listId = destination.droppableId;
-    target.position = destination.index;
-
-    // 移動対象以外のカード (source list内)の情報を更新
-    const othersInSrc = currentCards
-      .filter(card => card.listId === source.droppableId)
-      .filter(card => card.id !== target.id)
-      .map((card, index) => new Card({ ...card, position: index }));
-
-
-    // 移動対象以外のカード (destination list内)の情報を更新
-    const othersInDst = currentCards
-      .filter(card => card.listId === destination.droppableId)
-      .map((card, index) => new Card({ ...card, position: index < target.position ? index : index + 1 }));
-
-    const resortedCards = [target, ...othersInSrc, ...othersInDst];
-    updateCards(resortedCards);
-    cardRepository
-      .update(resortedCards)
-      .catch(error => {
-        setCurrentCards(originalCards);
-        console.error(error);
-      }); 
   }
 
   // ページ初回読込時の処理
