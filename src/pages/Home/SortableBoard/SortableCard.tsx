@@ -32,7 +32,7 @@ export function SortableCard({ card }: SortableCardProps) {
                   <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
                 </svg>}
               </span>
-              ${card.title}
+              {card.title} {card.position}
             </div>
             <div className="card-badge">
               🕒 {card.dueDate ? dateUtil.format(card.dueDate) : '期限を設定してください'}

@@ -15,8 +15,24 @@ export const addCardAtom = atom(
 export const updateCardAtom = atom(
   null,
   (get, set, updatedCard: Card) => {
-    const prev = get(currentCardsAtom)
+    const prev = get(currentCardsAtom);
     set(currentCardsAtom, prev.map(card => card.id === updatedCard.id ? updatedCard : card));
+  }
+);
+
+export const updateCardsAtom = atom(
+  null,
+  (get, set, updatedCards: Card[]) => {
+    const prev = get(currentCardsAtom);
+    const next = structuredClone(prev);
+    updatedCards.forEach(updatedCard => {
+      next.forEach(card => {
+        if (card.id === updatedCard.id) {
+          card.position = updatedCard.position;
+        }
+      });
+    });
+    set(currentCardsAtom, next.sort((a, b) => a.position - b.position));
   }
 )
 
